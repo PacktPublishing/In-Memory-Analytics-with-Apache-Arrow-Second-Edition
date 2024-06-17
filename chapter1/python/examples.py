@@ -29,7 +29,7 @@ import numpy as np
 NROWS = 8192
 NCOLS = 16
 data = [pa.array(np.random.randn(NROWS)) for i in range(NCOLS)]
-cols = ['c' + str(i) for i in range(NCOLS)] 
+cols = ['c' + str(i) for i in range(NCOLS)]
 rb = pa.RecordBatch.from_arrays(data, cols)
 print(rb.schema)
 print(rb.num_rows)
@@ -65,7 +65,7 @@ archers = pa.array(archer_list, type=archer_type)
 print(archers.type)
 print(archers)
 
-rb = pa.RecordBatch.from_arrays(archers.flatten(), 
+rb = pa.RecordBatch.from_arrays(archers.flatten(),
                                 ['archer', 'location', 'year'])
 print(rb)
 print(rb.num_rows) # prints 5
@@ -77,9 +77,11 @@ slice = rb.slice(1, 3) # (start, length)
 print(slice.num_rows) # prints 3, not 5
 print(rb.column(0)[0]) # <pyarrow.StringScalar: 'Legolas'>
 print(slice.column(0)[0]) # <pyarrow.StringScalar: 'Oliver'>
-archerslice = archers[1:3] # slice of length 2 viewing indexes 
+archerslice = archers[1:3] # slice of length 2 viewing indexes
                            # 1 and 2 from the struct array
                            # so it slices all three arrays
 print(rb.to_pydict()) # prints dict {column: list<values>}
 print(archers.to_pylist()) # prints the same list of dictionaries
                            # we started with
+
+

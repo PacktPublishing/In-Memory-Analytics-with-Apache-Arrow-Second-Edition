@@ -1,0 +1,2 @@
+*.csv eol=lf filter=lfs diff=lfs merge=lfs -text
+sample_data/sliced.parquet filter=lfs diff=lfs merge=lfs -text
