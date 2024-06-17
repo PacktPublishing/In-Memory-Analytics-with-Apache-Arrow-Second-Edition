@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # MIT License
 #
 # Copyright (c) 2024 Packt
@@ -20,26 +22,4 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
----
-Checks:
-      'modernize-*,
-       -modernize-use-equals-default,
-       -modernize-concat-nested-namespaces,
-       -modernize-use-trailing-return-type'
-
-WarningsAsErrors: ''
-HeaderFilterRegex: ''
-AnalyzeTemporaryDtors: false
-FormatStyle:     none
-CheckOptions:
- - key:             modernize-loop-convert.MaxCopySize
-   value:           '16'
- - key:             modernize-loop-convert.MinConfidence
-   value:           reasonable
- - key:             modernize-pass-by-value.IncludeStyle
-   value:           llvm
- - key:             modernize-replace-auto-ptr.IncludeStyle
-   value:           llvm
- - key:             modernize-use-nullptr.NullMacros
-   value:           'NULL'
-...
+g++ examples.cc -o examples `pkg-config --cflags --libs arrow`
