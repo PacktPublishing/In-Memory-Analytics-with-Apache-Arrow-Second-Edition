@@ -85,3 +85,34 @@ print(archers.to_pylist()) # prints the same list of dictionaries
                            # we started with
 
 
+from typing import NamedTuple, List
+
+class DataRow(NamedTuple):
+    id: int
+    component: int
+    component_cost: List[float]
+
+def vector_to_columnar(rows: List[DataRow]):
+    return pa.table({
+        "id": [r.id for r in rows],
+        "components": [r.component for r in rows],
+        "component_cost": [r.component_cost for r in rows],
+    })
+
+def columnar_to_vector(tbl: pa.Table):
+    ids = tbl.column(0).to_pylist()
+    components = tbl.column(1).to_pylist()
+    component_cost = tbl.column(2).to_pylist()
+
+    out = list()
+    for i in range(tbl.num_rows):
+        out.append(DataRow(ids[i], components[i], component_cost[i]))
+    
+    return out
+
+orig = [DataRow(1, 1, [10]), DataRow(2, 3, [11, 12, 13]), DataRow(3, 2, [15, 25])]
+tbl = vector_to_columnar(orig)
+converted = columnar_to_vector(tbl)
+assert len(orig) == len(converted)
+
+print(converted)

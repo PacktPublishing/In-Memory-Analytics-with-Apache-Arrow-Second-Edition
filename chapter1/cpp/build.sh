@@ -22,4 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-g++ examples.cc -o examples `pkg-config --cflags --libs arrow`
+# the second line adds a linker option specifying the rpath so we don't
+# need to worry about the LD_LIBRARY_PATH when running the executable
+g++ examples.cc -o examples `pkg-config --cflags --libs arrow` \
+    -Wl,-rpath=`pkg-config --libs-only-L arrow | cut -c 3-`

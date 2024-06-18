@@ -134,9 +134,95 @@ func struct_example_struct_builder() {
 	fmt.Println(archers)
 }
 
+type DataRow struct {
+	ID            int64
+	Component     int64
+	ComponentCost []float64
+}
+
+func VectorToColumnar(rows []DataRow) arrow.Table {
+	pool := memory.DefaultAllocator
+	schema := arrow.NewSchema([]arrow.Field{
+		{Name: "id", Type: arrow.PrimitiveTypes.Int64},
+		{Name: "components", Type: arrow.PrimitiveTypes.Int64},
+		{Name: "component_cost", Type: arrow.ListOf(arrow.PrimitiveTypes.Float64)},
+	}, nil)
+
+	recBldr := array.NewRecordBuilder(pool, schema)
+	defer recBldr.Release()
+
+	idBldr := recBldr.Field(0).(*array.Int64Builder)
+	compBldr := recBldr.Field(1).(*array.Int64Builder)
+	compCostBldr := recBldr.Field(2).(*array.ListBuilder)
+	compItemCostBldr := compCostBldr.ValueBuilder().(*array.Float64Builder)
+
+	for _, r := range rows {
+		idBldr.Append(r.ID)
+		compBldr.Append(r.Component)
+		compCostBldr.Append(true)
+		compItemCostBldr.AppendValues(r.ComponentCost, nil)
+	}
+
+	rec := recBldr.NewRecord()
+	defer rec.Release()
+
+	return array.NewTableFromRecords(schema, []arrow.Record{rec})
+}
+
+func ColumnarToVector(tbl arrow.Table) []DataRow {
+	expectedSchema := arrow.NewSchema([]arrow.Field{
+		{Name: "id", Type: arrow.PrimitiveTypes.Int64},
+		{Name: "components", Type: arrow.PrimitiveTypes.Int64},
+		{Name: "component_cost", Type: arrow.ListOf(arrow.PrimitiveTypes.Float64)},
+	}, nil)
+
+	if !expectedSchema.Equal(tbl.Schema()) {
+		panic("schemas do not match!")
+	}
+
+	ids := tbl.Column(0).Data().Chunk(0).(*array.Int64)
+	comps := tbl.Column(1).Data().Chunk(0).(*array.Int64)
+	compCost := tbl.Column(2).Data().Chunk(0).(*array.List)
+	compCostValues := compCost.ListValues().(*array.Float64)
+
+	ccvRaw := compCostValues.Float64Values()
+	out := make([]DataRow, 0, tbl.NumRows())
+	for i := 0; i < int(tbl.NumRows()); i++ {
+		start, end := compCost.ValueOffsets(i)
+
+		out = append(out, DataRow{
+			ID:            ids.Value(i),
+			Component:     comps.Value(i),
+			ComponentCost: ccvRaw[start:end],
+		})
+	}
+
+	return out
+}
+
+func runRowConversions() {
+	orig := []DataRow{
+		{1, 1, []float64{10}},
+		{2, 3, []float64{11, 12, 13}},
+		{3, 2, []float64{15, 25}},
+	}
+
+	tbl := VectorToColumnar(orig)
+	defer tbl.Release()
+
+	converted := ColumnarToVector(tbl)
+	if len(converted) != int(tbl.NumRows()) {
+		panic("mismatched number of rows")
+	}
+
+	fmt.Println(tbl)
+	fmt.Println(converted)
+}
+
 func main() {
 	simple_example()
 	random_example()
 	struct_example()
 	struct_example_struct_builder()
+	runRowConversions()
 }
