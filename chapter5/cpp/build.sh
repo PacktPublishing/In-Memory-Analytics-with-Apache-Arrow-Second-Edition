@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/sh
 
 # MIT License
 #
@@ -22,22 +22,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from _sample import ffi, lib
-import pyarrow as pa
-import pyarrow.parquet as pq
-
-f = pq.ParquetFile('../../sample_data/yellow_tripdata_2015-01.parquet')
-batches = f.iter_batches(1048756)
-rdr = pa.ipc.RecordBatchReader.from_batches(f.schema_arrow, batches)
-c_stream = ffi.new('struct ArrowArrayStream*')
-ptr_stream = int(ffi.cast('uintptr_t', c_stream))
-
-rdr._export_to_c(ptr_stream)
-del rdr, batches
-lib.processStream(ptr_stream)
-
-
-
-tensor_type = pa.fixed_shape_tensor(pa.int32(), [3, 2])
-pa.ExtensionArray.from_storage(tensor_type, 
-    pa.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], pa.list_(pa.int32(), 6)))
+g++ compute_functions.cc -o compute_functions `pkg-config --cflags --libs parquet arrow-compute`
+g++ compute_or_not.cc -O3 -o compute_or_not `pkg-config --cflags --libs parquet arrow-compute`

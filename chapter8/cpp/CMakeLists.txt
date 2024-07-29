@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-
 # MIT License
 #
-# Copyright (c) 2024 Packt
+# Copyright (c) 2021 Packt
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,22 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from _sample import ffi, lib
-import pyarrow as pa
-import pyarrow.parquet as pq
+cmake_minimum_required(VERSION 3.20)
+message(STATUS "Building using CMake version: ${CMAKE_VERSION}")
+project(adbc-sqlite CXX)
 
-f = pq.ParquetFile('../../sample_data/yellow_tripdata_2015-01.parquet')
-batches = f.iter_batches(1048756)
-rdr = pa.ipc.RecordBatchReader.from_batches(f.schema_arrow, batches)
-c_stream = ffi.new('struct ArrowArrayStream*')
-ptr_stream = int(ffi.cast('uintptr_t', c_stream))
+include(CMakeParseArguments)
 
-rdr._export_to_c(ptr_stream)
-del rdr, batches
-lib.processStream(ptr_stream)
-
-
-
-tensor_type = pa.fixed_shape_tensor(pa.int32(), [3, 2])
-pa.ExtensionArray.from_storage(tensor_type, 
-    pa.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], pa.list_(pa.int32(), 6)))
+find_package(AdbcDriverSQLite)
+add_executable(adbc-sqlite adbc_sqlite.cc)
+target_link_libraries(adbc-sqlite PRIVATE AdbcDriverSQLite::adbc_driver_sqlite_shared)

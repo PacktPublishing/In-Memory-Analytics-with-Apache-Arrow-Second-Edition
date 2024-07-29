@@ -22,10 +22,10 @@
 
 module chapter2
 
-go 1.22.4
+go 1.21
 
 require (
-	github.com/apache/arrow/go/v16 v16.1.0
+	github.com/apache/arrow/go/v17 v17.0.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.19
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.55.2
 	github.com/wolfeidau/s3iofs v1.5.2

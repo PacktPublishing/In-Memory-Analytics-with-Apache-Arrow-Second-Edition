@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/sh
 
 # MIT License
 #
@@ -22,22 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from _sample import ffi, lib
-import pyarrow as pa
-import pyarrow.parquet as pq
+PQDSFLAGS=`pkg-config --cflags --libs parquet arrow-dataset`
+LDFLAGS="-Wl,-rpath=`pkg-config --libs-only-L arrow | cut -c 3-`"
 
-f = pq.ParquetFile('../../sample_data/yellow_tripdata_2015-01.parquet')
-batches = f.iter_batches(1048756)
-rdr = pa.ipc.RecordBatchReader.from_batches(f.schema_arrow, batches)
-c_stream = ffi.new('struct ArrowArrayStream*')
-ptr_stream = int(ffi.cast('uintptr_t', c_stream))
-
-rdr._export_to_c(ptr_stream)
-del rdr, batches
-lib.processStream(ptr_stream)
-
-
-
-tensor_type = pa.fixed_shape_tensor(pa.int32(), [3, 2])
-pa.ExtensionArray.from_storage(tensor_type, 
-    pa.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], pa.list_(pa.int32(), 6)))
+g++ datasets_api.cc -O3 -o datasets_api $PQDSFLAGS $LDFLAGS
+g++ s3_datasets.cc -O3 -o s3_dataset $PQDSFLAGS $LDFLAGS
+g++ streaming_engine.cc -O3 -o streaming_engine $PQDSFLAGS $LDFLAGS
+g++ write_partitioned.cc -O3 -o write_partitioned $PQDSFLAGS $LDFLAGS

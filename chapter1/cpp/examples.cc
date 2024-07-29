@@ -31,6 +31,15 @@
 #include <random>
 #include <vector>
 
+#define ABORT_NOT_OK(expr)                                          \
+  do {                                                              \
+    auto _res = (expr);                                             \
+    ::arrow::Status _st = ::arrow::internal::GenericToStatus(_res); \
+    if (!_st.ok()) {                                                \
+      _st.Abort();                                                  \
+    }                                                               \
+  } while(false);
+
 void first_example() {
   std::vector<int64_t> data{1, 2, 3, 4};
   auto arr = std::make_shared<arrow::Int64Array>(data.size(), arrow::Buffer::Wrap(data));
@@ -51,7 +60,7 @@ void random_data_example() {
   arrow::FieldVector fields;
   for (int i = 0; i < ncols; ++i) {
     for (int j = 0; j < nrows; ++j) {
-      ARROW_UNUSED(builder.Append(d(gen)));
+      ABORT_NOT_OK(builder.Append(d(gen)));
     }
     auto status = builder.Finish(&columns[i]);
     if (!status.ok()) {
@@ -78,17 +87,15 @@ void building_struct_array() {
                                      "Greece"};
   std::vector<int16_t> years{1954, 1941, 2012, 1996, -600};
 
-  children.resize(3);
-  // we'll use ARROW_UNUSED and ignore the status returns for now
-  // if we don't, then we'll get compiler warnings due to [[nodiscard]]
+  children.resize(3);  
   arrow::StringBuilder str_bldr;
-  ARROW_UNUSED(str_bldr.AppendValues(archers));
-  ARROW_UNUSED(str_bldr.Finish(&children[0]));
-  ARROW_UNUSED(str_bldr.AppendValues(locations));
-  ARROW_UNUSED(str_bldr.Finish(&children[1]));
+  ABORT_NOT_OK(str_bldr.AppendValues(archers));
+  ABORT_NOT_OK(str_bldr.Finish(&children[0]));
+  ABORT_NOT_OK(str_bldr.AppendValues(locations));
+  ABORT_NOT_OK(str_bldr.Finish(&children[1]));
   arrow::Int16Builder year_bldr;
-  ARROW_UNUSED(year_bldr.AppendValues(years));
-  ARROW_UNUSED(year_bldr.Finish(&children[2]));
+  ABORT_NOT_OK(year_bldr.AppendValues(years));
+  ABORT_NOT_OK(year_bldr.Finish(&children[2]));
 
   arrow::StructArray arr{
       arrow::struct_(
@@ -104,7 +111,7 @@ void build_struct_builder() {
                       field("year", arrow::int16())});
 
   std::unique_ptr<arrow::ArrayBuilder> tmp;
-  ARROW_UNUSED(arrow::MakeBuilder(arrow::default_memory_pool(), st_type, &tmp));
+  ABORT_NOT_OK(arrow::MakeBuilder(arrow::default_memory_pool(), st_type, &tmp));
   std::shared_ptr<arrow::StructBuilder> builder;
   builder.reset(static_cast<arrow::StructBuilder*>(tmp.release()));
 
@@ -120,14 +127,14 @@ void build_struct_builder() {
   std::vector<int16_t> years{1954, 1941, 2012, 1996, -600};
 
   for (int i = 0; i < archers.size(); ++i) {
-    ARROW_UNUSED(builder->Append());
-    ARROW_UNUSED(archer_builder->Append(archers[i]));
-    ARROW_UNUSED(location_builder->Append(locations[i]));
-    ARROW_UNUSED(year_builder->Append(years[i]));
+    ABORT_NOT_OK(builder->Append());
+    ABORT_NOT_OK(archer_builder->Append(archers[i]));
+    ABORT_NOT_OK(location_builder->Append(locations[i]));
+    ABORT_NOT_OK(year_builder->Append(years[i]));
   }
 
   std::shared_ptr<arrow::Array> out;
-  ARROW_UNUSED(builder->Finish(&out));  // ignoring status
+  ABORT_NOT_OK(builder->Finish(&out));  // ignoring status
   std::cout << out->ToString() << std::endl;
 }
 

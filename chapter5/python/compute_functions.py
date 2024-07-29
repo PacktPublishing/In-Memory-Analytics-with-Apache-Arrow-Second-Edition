@@ -22,22 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from _sample import ffi, lib
-import pyarrow as pa
 import pyarrow.parquet as pq
+import pyarrow.compute as pc
 
-f = pq.ParquetFile('../../sample_data/yellow_tripdata_2015-01.parquet')
-batches = f.iter_batches(1048756)
-rdr = pa.ipc.RecordBatchReader.from_batches(f.schema_arrow, batches)
-c_stream = ffi.new('struct ArrowArrayStream*')
-ptr_stream = int(ffi.cast('uintptr_t', c_stream))
+filepath = '../../sample_data/yellow_tripdata_2015-01.parquet'
 
-rdr._export_to_c(ptr_stream)
-del rdr, batches
-lib.processStream(ptr_stream)
+tbl = pq.read_table(filepath) # entire file
+tbl_col = pq.read_table(filepath, columns=['total_amount']) # just the one column
 
+column = tbl['total_amount']
+print(pc.add(column, 5.5))
 
+print(pc.min_max(column))
 
-tensor_type = pa.fixed_shape_tensor(pa.int32(), [3, 2])
-pa.ExtensionArray.from_storage(tensor_type, 
-    pa.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], pa.list_(pa.int32(), 6)))
+sort_keys = [('total_amount', 'descending')]
+out = tbl.take(pc.sort_indices(tbl, sort_keys=sort_keys))
+print(out)

@@ -9,8 +9,8 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -20,23 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-module chapter1
+#include <chrono>
+#include <iostream>
 
-go 1.21
+struct timer {
+  timer() : start_{std::chrono::system_clock::now()} {}
+  ~timer() {
+    std::cout << std::chrono::duration<double>(
+                     std::chrono::system_clock::now() - start_)
+                     .count()
+              << " s\n";
+  }
 
-toolchain go1.22.4
-
-require github.com/apache/arrow/go/v17 v17.0.0
-
-require (
-	github.com/goccy/go-json v0.10.3 // indirect
-	github.com/google/flatbuffers v24.3.25+incompatible // indirect
-	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
-	github.com/zeebo/xxh3 v1.0.2 // indirect
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/mod v0.18.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/tools v0.22.0 // indirect
-	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-)
+  std::chrono::time_point<std::chrono::system_clock> start_;
+};
