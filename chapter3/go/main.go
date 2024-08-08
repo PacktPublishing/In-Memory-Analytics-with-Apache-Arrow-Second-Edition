@@ -23,6 +23,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
 	"os"
@@ -37,7 +38,8 @@ import (
 
 func main() {
 	cfg, err := config.LoadDefaultConfig(context.Background(),
-		config.WithRegion("us-east-1"))
+		config.WithRegion("us-east-1"),
+		config.WithCredentialsProvider(aws.AnonymousCredentials{}))
 	if err != nil {
 		panic(err)
 	}
@@ -45,106 +47,38 @@ func main() {
 	client := s3.NewFromConfig(cfg)
 	obj, err := client.GetObject(context.Background(),
 		&s3.GetObjectInput{
-			Bucket: aws.String("nyc-tlc"),
-			Key:    aws.String("csv_backup/yellow_tripdata_2020-11.csv")})
+			Bucket: aws.String("dataforgood-fb-data"),
+			Key:    aws.String("csv/month=2019-06/country=ZWE/type=children_under_five/ZWE_children_under_five.csv.gz")})
 	if err != nil {
 		panic(err)
 	}
 
 	schema := arrow.NewSchema([]arrow.Field{
 		{
-			Name:     "VendorID",
-			Type:     arrow.PrimitiveTypes.Int64,
-			Nullable: true,
-		},
-		{
-			Name:     "tpep_pickup_datetime",
-			Type:     arrow.BinaryTypes.String,
-			Nullable: true,
-		},
-		{
-			Name:     "tpep_dropoff_datetime",
-			Type:     arrow.BinaryTypes.String,
-			Nullable: true,
-		},
-		{
-			Name:     "passenger_count",
-			Type:     arrow.PrimitiveTypes.Int64,
-			Nullable: true,
-		},
-		{
-			Name:     "trip_distance",
+			Name:     "latitude",
 			Type:     arrow.PrimitiveTypes.Float64,
 			Nullable: true,
 		},
 		{
-			Name:     "RatecodeID",
-			Type:     arrow.PrimitiveTypes.Int64,
-			Nullable: true,
-		},
-		{
-			Name:     "store_and_fwd_flag",
-			Type:     arrow.BinaryTypes.String,
-			Nullable: true,
-		},
-		{
-			Name:     "PULocationID",
-			Type:     arrow.PrimitiveTypes.Int64,
-			Nullable: true,
-		},
-		{
-			Name:     "DOLocationID",
-			Type:     arrow.PrimitiveTypes.Int64,
-			Nullable: true,
-		},
-		{
-			Name:     "payment_type",
-			Type:     arrow.BinaryTypes.String,
-			Nullable: true,
-		},
-		{
-			Name:     "fare_amount",
+			Name:     "longitude",
 			Type:     arrow.PrimitiveTypes.Float64,
 			Nullable: true,
 		},
 		{
-			Name:     "extra",
-			Type:     arrow.PrimitiveTypes.Float64,
-			Nullable: true,
-		},
-		{
-			Name:     "mta_tax",
-			Type:     arrow.PrimitiveTypes.Float64,
-			Nullable: true,
-		},
-		{
-			Name:     "tip_amount",
-			Type:     arrow.PrimitiveTypes.Float64,
-			Nullable: true,
-		},
-		{
-			Name:     "tolls_amount",
-			Type:     arrow.PrimitiveTypes.Float64,
-			Nullable: true,
-		},
-		{
-			Name:     "improvement_surcharge",
-			Type:     arrow.PrimitiveTypes.Float64,
-			Nullable: true,
-		},
-		{
-			Name:     "total_amount",
-			Type:     arrow.PrimitiveTypes.Float64,
-			Nullable: true,
-		},
-		{
-			Name:     "congestion_surcharge",
+			Name:     "population",
 			Type:     arrow.PrimitiveTypes.Float64,
 			Nullable: true,
 		},
 	}, nil)
 
-	reader := csv.NewReader(obj.Body, schema, csv.WithHeader(true))
+	rdr, err := gzip.NewReader(obj.Body)
+	if err != nil {
+		panic(err)
+	}
+	defer rdr.Close()
+
+	reader := csv.NewReader(rdr, schema, csv.WithChunk(500000),
+		csv.WithHeader(true), csv.WithComma('\t'))
 	defer reader.Release()
 
 	w, _ := os.Create("tripdata.arrow")
