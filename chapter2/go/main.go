@@ -48,7 +48,7 @@ func readParquet() {
 	client := s3.NewFromConfig(cfg)
 	s3fs := s3iofs.NewWithClient("nyc-tlc", client)
 
-	f, err := s3fs.Open("trip data/yellow_tripdata_2020-11.parquet")
+	f, err := s3fs.Open("trip data/yellow_tripdata_2015-01.parquet")
 	if err != nil {
 		panic(err)
 	}
