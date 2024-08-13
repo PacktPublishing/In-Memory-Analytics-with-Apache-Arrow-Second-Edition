@@ -65,7 +65,7 @@ memory_arrow = psutil.Process(os.getpid()).memory_info().rss >> 20
 source = pa.memory_map('yellow_tripdata_2015-01.arrow', 'rb')
 col_arrow_mmap = pa.ipc.RecordBatchFileReader(source).read_all().column(
               'total_amount')
-# pc.mean(col_arrow_mmap)
+pc.mean(col_arrow_mmap)
 memory_mmapped = psutil.Process(os.getpid()).memory_info().rss >> 20
 
 print('pandas:', memory_pd_csv - memory_init, ' MB')

@@ -24,14 +24,15 @@
 
 import pyarrow as pa
 import pyarrow.csv
+import pyarrow.ipc
 import pyarrow.parquet as pq
 import pandas as pd
 
 # run this from the sample_data directory to generate the .parquet
 # .arrow and -nonan.arrow files
 
-tbl = pa.csv.read_csv('yellow_tripdata_2015-01.csv')
-pq.write_table(tbl, 'yellow_tripdata_2015-01.parquet')
+tbl = pq.read_table('yellow_tripdata_2015-01.parquet').combine_chunks()
+pa.csv.write_csv(tbl, 'yellow_tripdata_2015-01.csv')
 with pa.OSFile('yellow_tripdata_2015-01.arrow', 'wb') as sink:
     with pa.RecordBatchFileWriter(sink, tbl.schema) as writer:
         writer.write_table(tbl)
