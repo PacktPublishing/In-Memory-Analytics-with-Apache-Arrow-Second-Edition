@@ -1,2 +1,4 @@
 *.csv eol=lf filter=lfs diff=lfs merge=lfs -text
 sample_data/sliced.parquet filter=lfs diff=lfs merge=lfs -text
+sample_data/yellow_tripdata_2015-01.csv filter=lfs diff=lfs merge=lfs -text
+sample_data/yellow_tripdata_2015-01.parquet filter=lfs diff=lfs merge=lfs -text
