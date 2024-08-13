@@ -21,18 +21,16 @@
 // SOFTWARE.
 
 #include <algorithm>
-#include <cassert>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <random>
-#include <vector>
 
-#include <arrow/c/abi.h>
-#include <arrow/c/helpers.h>
-#include <cudf/column/column_factories.hpp>
-#include <cudf/groupby.hpp>
-#include <cudf/interop.hpp>
-#include <cudf/reduction.hpp>
+#include "abi.h"
+
+#ifdef USE_NANOARROW
+#include "nanoarrow/nanoarrow.hpp" // for export_int32_data_nanoarrow
+#endif
 
 std::vector<int32_t> generate_data(size_t size) {
   static std::uniform_int_distribution<int32_t> dist(std::numeric_limits<int32_t>::min(),
@@ -46,67 +44,53 @@ std::vector<int32_t> generate_data(size_t size) {
 
 extern "C" {
 void export_int32_data(struct ArrowArray*);
-void get_sum(struct ArrowSchema* in_schema, struct ArrowDeviceArray* input,
-             struct ArrowSchema* out_schema, struct ArrowDeviceArray* output);
+#ifdef USE_NANOARROW
+// returns 0 on success, anything else on failure
+int export_int32_data_nanoarrow(struct ArrowArray*);
+#endif
 }
 
 void export_int32_data(struct ArrowArray* array) {
-  std::vector<int32_t>* vecptr = new std::vector<int32_t>(std::move(generate_data(1000)));
+  const int64_t length = 1000;
+  std::unique_ptr<std::vector<int32_t>> data =
+      std::make_unique<std::vector<int32_t>>(generate_data(length));
 
-  *array = (struct ArrowArray){
-      .length = static_cast<int64_t>(vecptr->size()),
-      .null_count = 0,
-      .offset = 0,
-      .n_buffers = 2,
-      .n_children = 0,
-      .buffers = (const void**)malloc(sizeof(void*) * 2),
-      .children = nullptr,
-      .dictionary = nullptr,
-      .release =
-          [](struct ArrowArray* arr) {
-            free(arr->buffers);
-            delete reinterpret_cast<std::vector<int32_t>*>(arr->private_data);
-            arr->release = nullptr;
-          },
-      .private_data = reinterpret_cast<void*>(vecptr),
+  *array = ArrowArray{
+      length,
+      0,                                                                   // null_count
+      0,                                                                   // offset
+      2,                                                                   // n_buffers
+      0,                                                                   // n_children
+      new const void*[2]{nullptr, reinterpret_cast<void*>(data->data())},  // buffers
+      nullptr,                                                             // children
+      nullptr,                                                             // dictionary
+      [](struct ArrowArray* arr) {  // release callback
+        delete[] arr->buffers;
+        delete reinterpret_cast<std::vector<int32_t>*>(arr->private_data);
+        arr->release = nullptr;
+      },
+      reinterpret_cast<void*>(data.release()),  // private_data
   };
-  array->buffers[0] = nullptr;
-  array->buffers[1] = vecptr->data();
-}  // end of function
-
-// if using Arrow < v17, you need to include these helpers manually
-// if using Arrow >= v17, these are in <arrow/c/helpers.h>
-inline int ArrowDeviceArrayIsReleased(const struct ArrowDeviceArray* array) {
-  return ArrowArrayIsReleased(&array->array);
 }
 
-inline void ArrowDeviceArrayMarkReleased(struct ArrowDeviceArray* array) {
-  ArrowArrayMarkReleased(&array->array);
+#ifdef USE_NANOARROW
+// use nanoarrow instead
+int export_int32_data_nanoarrow(struct ArrowArray* array) {
+  const int64_t length = 1000;
+  auto data = generate_data(length);
+
+  // initialize the structure with INT32 type
+  NANOARROW_RETURN_NOT_OK(ArrowArrayInitFromType(array, NANOARROW_TYPE_INT32));
+  // initialize the data buffer from the generated data and set up the deallocator
+  // nanoarrow handles all the lifetimes for you and moves it into the array object
+  // along with constructing the release callback function for you.
+  nanoarrow::BufferInitSequence(ArrowArrayBuffer(array, 1), std::move(data));
+
+  // now we set our null count and length
+  array->null_count = 0;
+  array->length = length;
+
+  // finally perform basic validity checks and finalization before returning
+  return ArrowArrayFinishBuildingDefault(array, nullptr);
 }
-
-inline void ArrowDeviceArrayMove(struct ArrowDeviceArray* src,
-                                 struct ArrowDeviceArray* dest) {
-  assert(dest != src);
-  assert(!ArrowDeviceArrayIsReleased(src));
-  memcpy(dest, src, sizeof(struct ArrowDeviceArray));
-  ArrowDeviceArrayMarkReleased(src);
-}
-
-void get_sum(ArrowSchema* in_schema, ArrowDeviceArray* input, ArrowSchema* out_schema,
-             ArrowDeviceArray* output) {
-  auto col = cudf::from_arrow_device_column(in_schema, input);
-  auto sumagg = cudf::make_sum_aggregation();
-  auto scalar = cudf::reduce(*col, *dynamic_cast<cudf::reduce_aggregation*>(sumagg.get()),
-                             col->type());
-  auto result = cudf::make_column_from_scalar(*scalar, 1);
-
-  ArrowSchemaMove(cudf::to_arrow_schema(cudf::table_view({*result}),
-                                        std::vector<cudf::column_metadata>{{"result"}})
-                      .get(),
-                  out_schema);
-
-  ArrowDeviceArrayMove(cudf::to_arrow_device(cudf::table_view({*result})).get(), output);
-
-  ArrowArrayRelease(&input->array);
-  ArrowSchemaRelease(in_schema);
-}
+#endif

@@ -25,17 +25,34 @@ message(STATUS "Building using CMake version: ${CMAKE_VERSION}")
 project(example-cdata CXX)
 
 include(CMakeParseArguments)
-find_package(Arrow REQUIRED)
-message(STATUS "Found Arrow: ${ARROW_VERSION}")
+include(FetchContent)
 
-find_package(cudf REQUIRED)
-add_library(example-cdata SHARED
-    example_cdata.cc)
+set(NANOARROW_NAMESPACE "ExampleCData")
+FetchContent_Declare(nanoarrow
+                    GIT_REPOSITORY https://github.com/apache/arrow-nanoarrow.git
+                    GIT_TAG 16f4306f58193eff18013cc75d8b7b49f1ad4108
+                    GIT_SHALLOW TRUE)
+
+FetchContent_MakeAvailable(nanoarrow)
+
+option(WITH_CUDA "build get_sum with CUDA support")
+add_library(example-cdata SHARED example_cdata.cc)
+target_compile_definitions(example-cdata PUBLIC USE_NANOARROW)
 set_target_properties(example-cdata 
     PROPERTIES CXX_STANDARD 20
                CXX_STANDARD_REQUIRED ON
                CXX_EXTENSIONS ON)
 
-target_include_directories(example-cdata 
-    PUBLIC ${ARROW_INCLUDE_DIR})
-target_link_libraries(example-cdata cudf::cudf)
+target_link_libraries(example-cdata PRIVATE nanoarrow)
+
+if(WITH_CUDA)
+    find_package(cudf REQUIRED)
+
+    add_library(get-sum SHARED example_with_cuda.cc)
+    set_target_properties(get-sum
+        PROPERTIES CXX_STANDARD 20
+                CXX_STANDARD_REQUIRED ON
+                CXX_EXTENSIONS ON)
+
+    target_link_libraries(get-sum PRIVATE nanoarrow cudf::cudf)
+endif(WITH_CUDA)

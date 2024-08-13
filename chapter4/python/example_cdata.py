@@ -29,15 +29,12 @@ import numpy as np
 from pyarrow.cffi import ffi
 ctx = cuda.Context(0)
 
-ffi.cdef("""
-    void export_int32_data(struct ArrowArray*);
-    void get_sum(struct ArrowSchema*, struct ArrowDeviceArray*,
-                 struct ArrowSchema*, struct ArrowDeviceArray*);
-""")
-
-lib = ffi.dlopen("../cpp/libexample-cdata.so")
-
 def run_export():
+    ffi.cdef("""
+        void export_int32_data(struct ArrowArray*);    
+    """)
+
+    lib = ffi.dlopen("../cpp/libexample-cdata.so")
     # create a new pointer with ffi
     c_arr = ffi.new("struct ArrowArray*")
     # cast it to a uintptr_t
@@ -52,6 +49,13 @@ def run_export():
     del arrnew # will call the release callback once it is garbage collected
 
 def run_cuda():
+    ffi.cdef("""    
+        void get_sum(struct ArrowSchema*, struct ArrowDeviceArray*,
+                     struct ArrowSchema*, struct ArrowDeviceArray*);
+    """)
+
+    lib = ffi.dlopen("../cpp/build/libget-sum.so")
+
     arr = np.arange(10, 14, dtype=np.int32)
     device_arr = numba.cuda.to_device(arr)
     cuda_buf = cuda.CudaBuffer.from_numba(device_arr.gpu_data)
