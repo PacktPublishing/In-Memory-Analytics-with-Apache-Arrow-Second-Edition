@@ -38,10 +38,10 @@ int main(int argc, char** argv) {
     std::vector<int32_t> testvalues(n);
     std::iota(std::begin(testvalues), std::end(testvalues), 0);
 
-    arrow::Int32Builder nb;
-    ARROW_UNUSED(nb.AppendValues(testvalues));
+    arrow::Int32Builder num_bldr;
+    ARROW_UNUSED(num_bldr.AppendValues(testvalues));
     std::shared_ptr<arrow::Array> numarr;
-    ARROW_UNUSED(nb.Finish(&numarr));
+    ARROW_UNUSED(num_bldr.Finish(&numarr));
 
     std::cout << "N: " << n << std::endl;
 
@@ -56,16 +56,16 @@ int main(int argc, char** argv) {
     arrow::Datum res2;
     {
       timer t;
-      arrow::Int32Builder b;
+      arrow::Int32Builder bldr;
       for (size_t i = 0; i < arr->length(); ++i) {
         if (arr->IsValid(i)) {
-          ARROW_UNUSED(b.Append(arr->Value(i) + 2));
+          ARROW_UNUSED(bldr.Append(arr->Value(i) + 2));
         } else {
-          ARROW_UNUSED(b.AppendNull());
+          ARROW_UNUSED(bldr.AppendNull());
         }
       }
       std::shared_ptr<arrow::Array> output;
-      ARROW_UNUSED(b.Finish(&output));
+      ARROW_UNUSED(bldr.Finish(&output));
       res2 = arrow::Datum{std::move(output)};
     }
     std::cout << std::boolalpha << (res1 == res2) << std::endl;
@@ -74,18 +74,18 @@ int main(int argc, char** argv) {
     {
       timer t;
       auto arr = std::static_pointer_cast<arrow::Int32Array>(numarr);
-      arrow::Int32Builder b;
-      ARROW_UNUSED(b.Reserve(arr->length()));
+      arrow::Int32Builder bldr;
+      ARROW_UNUSED(bldr.Reserve(arr->length()));
       std::for_each(std::begin(*arr), std::end(*arr),
-                    [&b](const auto& v) {
+                    [&bldr](const auto& v) {
                       if (v) {
-                        ARROW_UNUSED(b.Append(*v + 2));
+                        ARROW_UNUSED(bldr.Append(*v + 2));
                       } else {
-                        ARROW_UNUSED(b.AppendNull());
+                        ARROW_UNUSED(bldr.AppendNull());
                       }
                     });
       std::shared_ptr<arrow::Array> output;
-      ARROW_UNUSED(b.Finish(&output));
+      ARROW_UNUSED(bldr.Finish(&output));
       res3 = arrow::Datum{std::move(output)};
     }
     std::cout << std::boolalpha << (res1 == res3) << std::endl;

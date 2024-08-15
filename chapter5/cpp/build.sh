@@ -22,5 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-g++ compute_functions.cc -o compute_functions `pkg-config --cflags --libs parquet arrow-compute`
-g++ compute_or_not.cc -O3 -o compute_or_not `pkg-config --cflags --libs parquet arrow-compute`
+LDARGS="-Wl,-rpath=$(pkg-config --libs-only-L arrow | cut -c 3-)"
+CXXFLAGS=$(pkg-config --cflags --libs parquet arrow-compute)
+
+g++ compute_functions.cc -o compute_functions $CXXFLAGS $LDARGS
+g++ compute_or_not.cc -O3 -o compute_or_not $CXXFLAGS $LDARGS
+g++ simple_acero.cc -o simple_acero $(pkg-config --cflags --libs arrow-acero parquet) $LDARGS
