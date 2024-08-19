@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # MIT License
 #
 # Copyright (c) 2021 Packt
@@ -20,20 +22,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.20)
-message(STATUS "Building using CMake version: ${CMAKE_VERSION}")
-project(chapter8 CXX)
+import pyarrow as pa
+import pyarrow.parquet as pq
+import adbc_driver_duckdb.dbapi
 
-include(CMakeParseArguments)
+tbl = pq.read_table('../../sample_data/yellow_tripdata_2015-01.parquet')
 
-find_package(AdbcDriverSQLite REQUIRED)
-add_executable(adbc-sqlite adbc_sqlite.cc)
-target_link_libraries(adbc-sqlite PRIVATE AdbcDriverSQLite::adbc_driver_sqlite_shared)
+with adbc_driver_duckdb.dbapi.connect('test.db') as conn:
+    with conn.cursor() as cur:
+        cur.adbc_ingest('taxi_sample', tbl)
+        cur.execute('select count(*) from taxi_sample')
+        print(cur.fetchone())
 
-find_package(AdbcDriverPostgreSQL REQUIRED)
-add_executable(adbc-postgres adbc_postgres.cc)
-target_link_libraries(adbc-postgres PRIVATE AdbcDriverPostgreSQL::adbc_driver_postgresql_shared)
-
-find_package(AdbcDriverManager REQUIRED)
-add_executable(adbc-driver-manager adbc_driver_manager.cc)
-target_link_libraries(adbc-driver-manager PRIVATE AdbcDriverManager::adbc_driver_manager_shared)
+        cur.execute('select * from taxi_sample')
+        tbl2 = cur.fetch_arrow_table()
+        print(tbl2.num_rows)

@@ -24,7 +24,7 @@
 
 import adbc_driver_sqlite.dbapi
 
-uri = "file:data.db"
+uri = "file:../cpp/data.db"
 with adbc_driver_sqlite.dbapi.connect(uri) as conn, conn.cursor() as cur:
     cur.execute("SELECT * FROM foo")
     table = cur.fetch_arrow_table()

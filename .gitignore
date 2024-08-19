@@ -5,6 +5,7 @@ chapter*/cpp/*
 !chapter5/cpp/timer.h
 !chapter4/cpp/CMakeLists.txt
 !chapter8/cpp/CMakeLists.txt
+!chapter8/cpp/helpers.h
 chapter*/go/*.h
 chapter*/go/*.o
 chapter*/go/*.c

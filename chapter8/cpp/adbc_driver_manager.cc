@@ -23,11 +23,12 @@
 #include <iostream>
 #include "helpers.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) {  
   AdbcError error;
 
   struct AdbcDatabase database = {};
   AbortNotOk(AdbcDatabaseNew(&database, &error), &error);
+  AbortNotOk(AdbcDatabaseSetOption(&database, "driver", "adbc_driver_sqlite", &error), &error);
   AbortNotOk(AdbcDatabaseSetOption(&database, "uri", "file:data.db", &error), &error);
   AbortNotOk(AdbcDatabaseInit(&database, &error), &error);
 

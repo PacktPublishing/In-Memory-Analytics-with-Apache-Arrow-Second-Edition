@@ -20,15 +20,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <iostream>
 #include "helpers.h"
+
+#include <iostream>
 
 int main(int argc, char** argv) {
   AdbcError error;
 
   struct AdbcDatabase database = {};
   AbortNotOk(AdbcDatabaseNew(&database, &error), &error);
-  AbortNotOk(AdbcDatabaseSetOption(&database, "uri", "file:data.db", &error), &error);
+  AbortNotOk(AdbcDatabaseSetOption(
+                 &database, "uri",
+                 "postgresql://postgres:mysecretpassword@0.0.0.0:5431/postgres", &error),
+             &error);
+
   AbortNotOk(AdbcDatabaseInit(&database, &error), &error);
 
   AdbcConnection conn;
@@ -47,11 +52,7 @@ int main(int argc, char** argv) {
 
   AbortNotOk(AdbcStatementSetSqlQuery(&stmt, "INSERT INTO foo VALUES ('bar')", &error),
              &error);
-
-  int64_t rows_affected = 0;
-  AbortNotOk(AdbcStatementExecuteQuery(&stmt, nullptr, &rows_affected, &error), &error);
-
-  std::cout << "Rows Inserted: " << rows_affected << std::endl;
+  AbortNotOk(AdbcStatementExecuteQuery(&stmt, nullptr, nullptr, &error), &error);
 
   Release(&stmt);
   Release(&conn);
