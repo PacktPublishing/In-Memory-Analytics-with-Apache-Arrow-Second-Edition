@@ -1,7 +1,6 @@
 # In-Memory Analytics with Apache Arrow
 
-<a href="https://www.packtpub.com/en-us/product/in-memory-analytics-with-apache-arrow-9781835461228"><img src="https://static.packt-cdn.com/products/<13-P ISBN>/cover/smaller" alt="In-Memory Analytics with Apache Arrow
-" height="256px" align="right"></a>
+<a href="https://www.packtpub.com/en-us/product/in-memory-analytics-with-apache-arrow-9781835461228"><img src="https://content.packt.com/_/image/xxlarge/B21920/cover_image_large.jpg" alt="In-Memory Analytics with Apache Arrow" height="256px" align="right"></a>
 
 This is the code repository for [<Book name>](https://www.packtpub.com/en-us/product/in-memory-analytics-with-apache-arrow-9781835461228), published by Packt.
 
@@ -55,9 +54,9 @@ With the following software and hardware list you can run all code files present
 |1-12|Go 1.21 or higher| Windows, macOS|
 
 ### Related products <Other books you may enjoy>
-* <Book name #1 from backmatter> [[Packt]](<Book link on Packtpub>) [[Amazon]](https://www.amazon.com/dp/<10P-ISBN>)
+* Polars Cookbook [[Packt]](https://www.packtpub.com/en-us/product/polars-cookbook-9781805121152) [[Amazon]](https://www.amazon.com/Polars-Cookbook-practical-transform-manipulate/dp/1805121154)
 
-* <Book name #2 from backmatter> [[Packt]](<Book link on Packtpub>) [[Amazon]](https://www.amazon.com/dp/<10P-ISBN>)
+* Getting Started with DuckDB [[Packt]](https://www.packtpub.com/en-us/product/getting-started-with-duckdb-9781803241005) [[Amazon]](https://www.amazon.com/Getting-Started-DuckDB-practical-efficiently/dp/1803241004)
 
-## Get to Know the Author(s)
+## Get to Know the Author
 **Matt Topol** is a software engineering enthusiast with roots at Brooklyn Polytechnic (now NYU-Poly). He joined FactSet Research Systems, Inc. in 2009, specializing in financial data systems. Matt’s career spans infrastructure and app development, team leadership, and architecting large-scale distributed systems for financial analytics. He is a key member of the Apache Arrow Project Management Committee (PMC), dedicated to expanding the Arrow community. Recently, he joined Voltron Data to focus on Arrow’s Golang library, promoting it globally through conferences and talks. Originally from Brentwood, NY, he now resides in Connecticut. Outside of work, Matt enjoys coding, creating intricate fantasy games, and enthusiastically sharing his expertise.
