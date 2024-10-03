@@ -2,7 +2,8 @@
 
 <a href="https://www.packtpub.com/en-us/product/in-memory-analytics-with-apache-arrow-9781835461228"><img src="https://content.packt.com/_/image/xxlarge/B21920/cover_image_large.jpg" alt="In-Memory Analytics with Apache Arrow" height="256px" align="right"></a>
 
-This is the code repository for [<Book name>](https://www.packtpub.com/en-us/product/in-memory-analytics-with-apache-arrow-9781835461228), published by Packt.
+This is the code repository for [In-Memory Analytics with Apache Arrow
+](https://www.packtpub.com/en-us/product/in-memory-analytics-with-apache-arrow-9781835461228), published by Packt.
 
 **Accelerate data analytics for efficient processing of flat and hierarchical data structures**
 
